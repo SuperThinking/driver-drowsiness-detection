@@ -6,16 +6,23 @@ import imutils
 from imutils import face_utils
 from matplotlib import pyplot as plt
 import vlc
+import train as train
 
 def euclideanDist(a, b):
     return (math.sqrt(math.pow(a[0]-b[0], 2)+math.pow(a[1]-b[1], 2)))
 def ear(eye):
     return ((euclideanDist(eye[1], eye[5])+euclideanDist(eye[2], eye[4]))/(2*euclideanDist(eye[0], eye[3])))
 
+open_avg = train.getAvg()
+close_avg = train.getAvg()
+
 alert = vlc.MediaPlayer('alert-sound.mp3')
-frame_thresh = 20
-close_thesh = 0.3
+frame_thresh = 15
+close_thresh = (close_avg+open_avg)/2.0
 flag = 0
+
+print(close_thresh)
+
 capture = cv2.VideoCapture(0)
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
@@ -36,13 +43,13 @@ while(True):
         rightEAR = ear(rightEye) #Get the right eye aspect ratio
         avgEAR = (leftEAR+rightEAR)/2.0
         # print(avgEAR)
-        if(avgEAR<close_thesh):
-            print('Closed', avgEAR)
+        if(avgEAR<close_thresh):
+            # print('Closed', avgEAR)
             flag+=1
             if(flag>=frame_thresh):
                 alert.play()
-        elif(avgEAR>close_thesh and flag):
-            print('Opened', avgEAR)
+        elif(avgEAR>close_thresh and flag):
+            # print('Opened', avgEAR)
             alert.stop()
             flag=0
         cv2.drawContours(gray, [leftEyeHull], -1, (0, 255, 0), 1)
