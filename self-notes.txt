@@ -1,5 +1,5 @@
--> 1st Step - Capture the face and ignore all the other stuff (background)
--> 2nd Step - Segment the face into parts and capture the eyes only
+-> 1st Step - Capture the face and ignore all the other stuff (background) -> DONE
+-> 2nd Step - Segment the face into parts and capture the eyes only -> DONE
 -> 3rd Step - Do some analysis on features that can be extracted
 -> 4th Step - Threshold has to be set i.e. the amount of time the eyes are remaining closed after which the system should alert the user
 
