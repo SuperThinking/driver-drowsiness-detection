@@ -23,12 +23,12 @@ def writeEyes(a, b, img):
     x1 = b[0][0]
     x2 = b[3][0]
     cv2.imwrite('right-eye.jpg', img[y1:y2, x1:x2])
-open_avg = train.getAvg()
-close_avg = train.getAvg()
+# open_avg = train.getAvg()
+# close_avg = train.getAvg()
 
 alert = vlc.MediaPlayer('alert-sound.mp3')
 frame_thresh = 15
-close_thresh = (close_avg+open_avg)/2.0
+close_thresh = 0.3#(close_avg+open_avg)/2.0
 flag = 0
 
 print(close_thresh)
@@ -55,13 +55,15 @@ while(True):
         avgEAR = (leftEAR+rightEAR)/2.0
         if(avgEAR<close_thresh):
             flag+=1
+            print(flag)
             if(flag>=frame_thresh):
                 alert.play()
         elif(avgEAR>close_thresh and flag):
+            print("Flag reseted to 0")
             alert.stop()
             flag=0
-        cv2.drawContours(gray, [leftEyeHull], -1, (0, 255, 0), 1)
-        cv2.drawContours(gray, [rightEyeHull], -1, (0, 255, 0), 1)
+        cv2.drawContours(gray, [leftEyeHull], -1, (255, 255, 255), 1)
+        cv2.drawContours(gray, [rightEyeHull], -1, (255, 255, 255), 1)
         writeEyes(leftEye, rightEye, frame)
     if(avgEAR>close_thresh):
         alert.stop()

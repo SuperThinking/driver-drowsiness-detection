@@ -12,11 +12,12 @@ def euc(x1, y1, x2, y2):
     return math.sqrt(math.pow(x2-x1, 2)+math.pow(y2-y1, 2))
 
 def insertObj(frame, glasses, l, r):
-    m = math.atan((r[0][1]/1.0-l[3][1]/1.0)/(l[3][0]/1.0-r[0][0]/1.0))*57.298
+    m = -math.atan((r[0][1]/1.0-l[3][1]/1.0)/(l[3][0]/1.0-r[0][0]/1.0))*57.298
     by = 4.35*math.pow(10, -3)*euc(r[0][0],r[0][1],r[3][0],r[3][1])
+    print(euc(r[0][0],r[0][1],r[3][0],r[3][1]))
     x_offset = (r[0][0]-int(by*122.0))
     y_offset = (r[0][1]-int(by*195.0))
-    glasses = imutils.rotate_bound(glasses, -m)
+    glasses = imutils.rotate_bound(glasses, m)
     glasses = cv2.resize(glasses, (0,0), fx=by, fy=by)
     y1, y2 = y_offset, y_offset + glasses.shape[0]
     x1, x2 = x_offset, x_offset + glasses.shape[1]
@@ -30,7 +31,7 @@ def insertObj(frame, glasses, l, r):
 
 capture = cv2.VideoCapture(0)
 
-glasses = cv2.imread('./glasses3.png', cv2.IMREAD_UNCHANGED)
+glasses = cv2.imread('./glasses.png', cv2.IMREAD_UNCHANGED)
 
 detector = dlib.get_frontal_face_detector()
 face_shape = dlib.shape_predictor('../shape_predictor_68_face_landmarks.dat')
