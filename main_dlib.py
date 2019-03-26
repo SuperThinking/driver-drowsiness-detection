@@ -10,6 +10,7 @@ import train as train
 
 def euclideanDist(a, b):
     return (math.sqrt(math.pow(a[0]-b[0], 2)+math.pow(a[1]-b[1], 2)))
+#EAR -> Eye Aspect ratio
 def ear(eye):
     return ((euclideanDist(eye[1], eye[5])+euclideanDist(eye[2], eye[4]))/(2*euclideanDist(eye[0], eye[3])))
 def writeEyes(a, b, img):
