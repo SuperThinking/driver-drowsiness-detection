@@ -50,9 +50,8 @@ while(True):
         dist_coeffs = np.zeros((4,1)) # Assuming no lens distortion
         (success, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
         
-        # print "Rotation Vector:\n {0}".format(rotation_vector)
-        # print "Translation Vector:\n {0}".format(translation_vector)
-        print(translation_vector[1])
+        print "Rotation Vector:\n {0}".format(rotation_vector)
+        print "Translation Vector:\n {0}".format(translation_vector)
         
         # Project a 3D point (0, 0, 1000.0) onto the image plane.
         # We use this to draw a line sticking out of the nose

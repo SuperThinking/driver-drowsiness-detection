@@ -7,15 +7,19 @@ from imutils import face_utils
 from matplotlib import pyplot as plt
 import vlc
 import train as train
+import sys, webbrowser, datetime
+
+def yawn(mouth):
+    return ((euclideanDist(mouth[2], mouth[10])+euclideanDist(mouth[4], mouth[8]))/(2*euclideanDist(mouth[0], mouth[6])))
 
 def getFaceDirection(shape, size):
     image_points = np.array([
-                                shape[33], #(359, 391),     # Nose tip
-                                shape[8],# (399, 561),     # Chin
-                                shape[45],# (337, 297),     # Left eye left corner
-                                shape[36],# (513, 301),     # Right eye right corne
-                                shape[54],# (345, 465),     # Left Mouth corner
-                                shape[48]# (453, 469)      # Right mouth corner
+                                shape[33],     # Nose tip
+                                shape[8],     # Chin
+                                shape[45],     # Left eye left corner
+                                shape[36],     # Right eye right corne
+                                shape[54],     # Left Mouth corner
+                                shape[48]     # Right mouth corner
                             ], dtype="double")
     
     # 3D model points.
@@ -38,35 +42,17 @@ def getFaceDirection(shape, size):
                             [0, focal_length, center[1]],
                             [0, 0, 1]], dtype = "double"
                             )
-        
-        # print "Camera Matrix :\n {0}".format(camera_matrix)
-        
     dist_coeffs = np.zeros((4,1)) # Assuming no lens distortion
     (success, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
-        
-        # print "Rotation Vector:\n {0}".format(rotation_vector)
-        # print "Translation Vector:\n {0}".format(translation_vector)
-    # print(translation_vector[1])
     return(translation_vector[1][0])
-        
-        # Project a 3D point (0, 0, 1000.0) onto the image plane.
-        # We use this to draw a line sticking out of the nose
- 
-    # (nose_end_point2D, jacobian) = cv2.projectPoints(np.array([(0.0, 0.0, 1000.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
-        
-    # for p in image_points:
-    #     cv2.circle(im, (int(p[0]), int(p[1])), 3, (0,0,255), -1)
-        
-        
-    # p1 = ( int(image_points[0][0]), int(image_points[0][1]))
-    # p2 = ( int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
-        
-    # cv2.line(im, p1, p2, (255,0,0), 2)
+
 def euclideanDist(a, b):
     return (math.sqrt(math.pow(a[0]-b[0], 2)+math.pow(a[1]-b[1], 2)))
+
 #EAR -> Eye Aspect ratio
 def ear(eye):
     return ((euclideanDist(eye[1], eye[5])+euclideanDist(eye[2], eye[4]))/(2*euclideanDist(eye[0], eye[3])))
+
 def writeEyes(a, b, img):
     y1 = max(a[1][1], a[2][1])
     y2 = min(a[4][1], a[5][1])
@@ -81,12 +67,17 @@ def writeEyes(a, b, img):
 # open_avg = train.getAvg()
 # close_avg = train.getAvg()
 
-alert = vlc.MediaPlayer('alert-sound.mp3')
-frame_thresh = 15
+alert = vlc.MediaPlayer('take_a_break.mp3')
+
+frame_thresh_1 = 15
+frame_thresh_2 = 10
+frame_thresh_3 = 5
+
 close_thresh = 0.3#(close_avg+open_avg)/2.0
 flag = 0
+yawn_countdown = 0
 
-print(close_thresh)
+# print(close_thresh)
 
 capture = cv2.VideoCapture(0)
 avgEAR = 0
@@ -94,6 +85,7 @@ detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 (leStart, leEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
 (reStart, reEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
+(mStart, mEnd) = face_utils.FACIAL_LANDMARKS_IDXS["mouth"]
 
 while(True):
     ret, frame = capture.read()
@@ -107,21 +99,39 @@ while(True):
         rightEye = shape[reStart:reEnd]
         leftEyeHull = cv2.convexHull(leftEye)
         rightEyeHull = cv2.convexHull(rightEye)
+        # print("Mouth Open Ratio", yawn(shape[mStart:mEnd]))
         leftEAR = ear(leftEye) #Get the left eye aspect ratio
         rightEAR = ear(rightEye) #Get the right eye aspect ratio
         avgEAR = (leftEAR+rightEAR)/2.0
         eyeContourColor = (255, 255, 255)
+
+        if(yawn(shape[mStart:mEnd])>0.6):
+            yawn_countdown=1
+
         if(avgEAR<close_thresh):
             flag+=1
-            eyeContourColor = (34,34,178)
+            eyeContourColor = (0,255,255)
             print(flag)
-            if(flag>=frame_thresh and getFaceDirection(shape, size)<0):
+            if(yawn_countdown and flag>=frame_thresh_3):
+                eyeContourColor = (147, 20, 255)
+                cv2.putText(gray, "Drowsy after yawn", (50,50), cv2.FONT_HERSHEY_COMPLEX, 1,(0,255,127),2)
+                alert.play()
+                yawn_countdown=0
+            elif(flag>=frame_thresh_2 and getFaceDirection(shape, size)<0):
+                eyeContourColor = (255, 0, 0)
+                cv2.putText(gray, "Drowsy", (50,50), cv2.FONT_HERSHEY_COMPLEX, 1,(0,255,127),2)
+                alert.play()
+            elif(flag>=frame_thresh_1):
                 eyeContourColor = (0, 0, 255)
+                cv2.putText(gray, "Drowsy", (50,50), cv2.FONT_HERSHEY_COMPLEX, 1,(0,255,127),2)
+                # print(datetime.datetime.now().time())
+                # webbrowser.open("https://www.google.com/maps/search/hotels+or+motels+near+me")
                 alert.play()
         elif(avgEAR>close_thresh and flag):
             print("Flag reseted to 0")
             alert.stop()
             flag=0
+
         cv2.drawContours(gray, [leftEyeHull], -1, eyeContourColor, 2)
         cv2.drawContours(gray, [rightEyeHull], -1, eyeContourColor, 2)
         writeEyes(leftEye, rightEye, frame)
