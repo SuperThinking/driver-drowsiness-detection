@@ -76,6 +76,8 @@ frame_thresh_3 = 5
 close_thresh = 0.3#(close_avg+open_avg)/2.0
 flag = 0
 yawn_countdown = 0
+map_counter = 0
+map_flag = 1
 
 # print(close_thresh)
 
@@ -116,21 +118,34 @@ while(True):
                 eyeContourColor = (147, 20, 255)
                 cv2.putText(gray, "Drowsy after yawn", (50,50), cv2.FONT_HERSHEY_COMPLEX, 1,(0,255,127),2)
                 alert.play()
-                yawn_countdown=0
+                if(map_flag):
+                    map_flag = 0
+                    map_counter+=1
             elif(flag>=frame_thresh_2 and getFaceDirection(shape, size)<0):
                 eyeContourColor = (255, 0, 0)
                 cv2.putText(gray, "Drowsy", (50,50), cv2.FONT_HERSHEY_COMPLEX, 1,(0,255,127),2)
                 alert.play()
+                if(map_flag):
+                    map_flag = 0
+                    map_counter+=1
             elif(flag>=frame_thresh_1):
                 eyeContourColor = (0, 0, 255)
                 cv2.putText(gray, "Drowsy", (50,50), cv2.FONT_HERSHEY_COMPLEX, 1,(0,255,127),2)
-                # print(datetime.datetime.now().time())
-                # webbrowser.open("https://www.google.com/maps/search/hotels+or+motels+near+me")
                 alert.play()
+                if(map_flag):
+                    map_flag = 0
+                    map_counter+=1
         elif(avgEAR>close_thresh and flag):
             print("Flag reseted to 0")
             alert.stop()
+            yawn_countdown=0
+            map_flag=1
             flag=0
+
+        if(map_counter>=3):
+            map_flag=1
+            map_counter=0
+            webbrowser.open("https://www.google.com/maps/search/hotels+or+motels+near+me")
 
         cv2.drawContours(gray, [leftEyeHull], -1, eyeContourColor, 2)
         cv2.drawContours(gray, [rightEyeHull], -1, eyeContourColor, 2)
