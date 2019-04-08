@@ -14,11 +14,11 @@ def yawn(mouth):
 
 def getFaceDirection(shape, size):
     image_points = np.array([
-                                shape[33],     # Nose tip
+                                shape[33],    # Nose tip
                                 shape[8],     # Chin
-                                shape[45],     # Left eye left corner
-                                shape[36],     # Right eye right corne
-                                shape[54],     # Left Mouth corner
+                                shape[45],    # Left eye left corner
+                                shape[36],    # Right eye right corne
+                                shape[54],    # Left Mouth corner
                                 shape[48]     # Right mouth corner
                             ], dtype="double")
     
@@ -67,7 +67,7 @@ def writeEyes(a, b, img):
 # open_avg = train.getAvg()
 # close_avg = train.getAvg()
 
-alert = vlc.MediaPlayer('take_a_break.mp3')
+alert = vlc.MediaPlayer('focus.mp3')
 
 frame_thresh_1 = 15
 frame_thresh_2 = 10
@@ -108,6 +108,7 @@ while(True):
         eyeContourColor = (255, 255, 255)
 
         if(yawn(shape[mStart:mEnd])>0.6):
+            cv2.putText(gray, "Yawn Detected", (50,50), cv2.FONT_HERSHEY_COMPLEX, 1,(0,255,127),2)
             yawn_countdown=1
 
         if(avgEAR<close_thresh):
@@ -123,14 +124,14 @@ while(True):
                     map_counter+=1
             elif(flag>=frame_thresh_2 and getFaceDirection(shape, size)<0):
                 eyeContourColor = (255, 0, 0)
-                cv2.putText(gray, "Drowsy", (50,50), cv2.FONT_HERSHEY_COMPLEX, 1,(0,255,127),2)
+                cv2.putText(gray, "Drowsy (Body Posture)", (50,50), cv2.FONT_HERSHEY_COMPLEX, 1,(0,255,127),2)
                 alert.play()
                 if(map_flag):
                     map_flag = 0
                     map_counter+=1
             elif(flag>=frame_thresh_1):
                 eyeContourColor = (0, 0, 255)
-                cv2.putText(gray, "Drowsy", (50,50), cv2.FONT_HERSHEY_COMPLEX, 1,(0,255,127),2)
+                cv2.putText(gray, "Drowsy (Normal)", (50,50), cv2.FONT_HERSHEY_COMPLEX, 1,(0,255,127),2)
                 alert.play()
                 if(map_flag):
                     map_flag = 0
@@ -145,6 +146,7 @@ while(True):
         if(map_counter>=3):
             map_flag=1
             map_counter=0
+            vlc.MediaPlayer('take_a_break.mp3').play()
             webbrowser.open("https://www.google.com/maps/search/hotels+or+motels+near+me")
 
         cv2.drawContours(gray, [leftEyeHull], -1, eyeContourColor, 2)
